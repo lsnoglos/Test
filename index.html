@@ -7,35 +7,53 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="fx-overlay" aria-hidden="true">
+      <div class="bolt b1"></div>
+      <div class="bolt b2"></div>
+      <div class="bolt b3"></div>
+    </div>
+
     <main class="app">
-      <header class="hero">
+      <header class="hero panel">
         <h1>🌟 Super Test de Ciencias Naturales 🌟</h1>
-        <p class="subtitle">100 preguntas divertidas para aprender jugando</p>
-        <div class="chips">
-          <span>👀 Sentidos</span>
-          <span>🔬 Ciencia</span>
-          <span>💡 Tecnología</span>
-          <span>🧼 Cuidado personal</span>
-          <span>🤝 Respeto</span>
-        </div>
+        <p class="subtitle">Preguntas aleatorias con 4 opciones y efectos divertidos</p>
       </header>
 
+      <section id="startPanel" class="panel start-panel">
+        <h2>Elige tus temas</h2>
+        <p>✅ Si eliges 1 tema: 50 preguntas (calificadas sobre 100)</p>
+        <p>✅ Si eliges todos los temas: 100 preguntas aleatorias (sobre 100)</p>
+        <div class="topics">
+          <label><input class="topic-check" type="checkbox" value="pubertad" /> Pubertad</label>
+          <label><input class="topic-check" type="checkbox" value="higiene" /> Higiene</label>
+          <label><input class="topic-check" type="checkbox" value="naturaleza" /> Naturaleza</label>
+          <label><input class="topic-check" type="checkbox" value="sentidos" /> Los 5 sentidos</label>
+          <label><input class="topic-check" type="checkbox" value="metodos" /> Método científico y empírico</label>
+        </div>
+        <p id="setupMessage" class="setup-message"></p>
+        <button id="startBtn" class="btn">▶️ Empezar</button>
+      </section>
+
       <section class="panel info">
-        <p id="progressText">Pregunta 1 de 100</p>
+        <p id="progressText">Selecciona temas para iniciar</p>
         <div class="progress-wrap">
           <div id="progressBar" class="progress-bar"></div>
         </div>
+        <div class="score-live">
+          <span>✅ Buenas: <strong id="scoreGood">0</strong></span>
+          <span>❌ Malas: <strong id="scoreBad">0</strong></span>
+        </div>
       </section>
 
-      <section id="quizCard" class="panel quiz-card">
+      <section id="quizCard" class="panel quiz-card hidden">
         <h2 id="questionText">Cargando pregunta...</h2>
         <div id="options" class="options"></div>
         <p id="feedback" class="feedback"></p>
       </section>
 
-      <section class="panel actions">
+      <section class="panel actions hidden">
         <button id="nextBtn" class="btn" disabled>Siguiente ➡️</button>
-        <button id="restartBtn" class="btn secondary">🔄 Reiniciar</button>
+        <button id="restartBtn" class="btn secondary">🔄 Cambiar temas</button>
       </section>
 
       <section id="result" class="panel result hidden" aria-live="polite"></section>
