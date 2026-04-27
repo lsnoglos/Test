@@ -18,12 +18,12 @@
           <label>Nombre: <input type="text" placeholder="____________________________" /></label>
           <label>Fecha: <input type="text" placeholder="____________________________" /></label>
         </div>
-        <p><strong>Instrucciones:</strong> Resuelve cada problema. Si necesitas, presta de la decena o de la centena.</p>
+        <p><strong>Instrucciones:</strong> Resuelve cada problema desde el celular y luego revisa tus resultados.</p>
       </section>
 
       <section id="setupPanel" class="panel start-panel">
-        <h2>Selecciona secciones</h2>
-        <p>Puedes generar solo una parte o una guía completa de 100 ejercicios aleatorios.</p>
+        <h2>Configurar prueba</h2>
+        <p>Puedes generar una prueba completa y resolverla en modo selección múltiple o en caja de texto.</p>
 
         <div class="topics">
           <label><input class="section-check" type="checkbox" value="directas" checked /> Parte 1: Restas directas</label>
@@ -33,8 +33,16 @@
 
         <div class="actions-row">
           <label for="totalExercises"><strong>Total de ejercicios:</strong></label>
-          <input id="totalExercises" type="number" min="10" max="200" step="10" value="100" />
-          <button id="generateBtn" class="btn">🧮 Generar guía</button>
+          <input id="totalExercises" type="number" min="10" max="200" step="10" value="30" />
+
+          <label for="answerMode"><strong>Tipo de respuesta:</strong></label>
+          <select id="answerMode">
+            <option value="multiple">Selección múltiple</option>
+            <option value="texto">Caja de texto</option>
+          </select>
+
+          <button id="generateBtn" class="btn">🧮 Generar prueba</button>
+          <button id="gradeBtn" class="btn success">✅ Ver resultados</button>
           <button id="printBtn" class="btn secondary">🖨️ Imprimir</button>
         </div>
 
@@ -42,8 +50,13 @@
       </section>
 
       <section id="worksheetPanel" class="panel worksheet-panel">
-        <h2 id="worksheetTitle">Ejercicios</h2>
+        <h2 id="worksheetTitle">Prueba interactiva</h2>
         <div id="worksheetContent" class="worksheet-content"></div>
+      </section>
+
+      <section id="resultPanel" class="panel result-panel hidden" aria-live="polite">
+        <h2>Resultados</h2>
+        <div id="resultContent"></div>
       </section>
     </main>
 

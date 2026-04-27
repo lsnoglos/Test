@@ -2,11 +2,17 @@ const SECTION_KEYS = ["directas", "prestando", "problemas"];
 
 const sectionChecks = [...document.querySelectorAll(".section-check")];
 const totalExercisesInput = document.getElementById("totalExercises");
+const answerMode = document.getElementById("answerMode");
 const generateBtn = document.getElementById("generateBtn");
+const gradeBtn = document.getElementById("gradeBtn");
 const printBtn = document.getElementById("printBtn");
 const setupMessage = document.getElementById("setupMessage");
 const worksheetTitle = document.getElementById("worksheetTitle");
 const worksheetContent = document.getElementById("worksheetContent");
+const resultPanel = document.getElementById("resultPanel");
+const resultContent = document.getElementById("resultContent");
+
+let currentExercises = [];
 
 const nouns = [
   "lápices",
@@ -55,11 +61,27 @@ function getSelectedSections() {
   return sectionChecks.filter((c) => c.checked).map((c) => c.value);
 }
 
+function withChoices(answer) {
+  const options = new Set([answer]);
+  while (options.size < 4) {
+    const delta = randomInt(5, 90) * (Math.random() < 0.5 ? -1 : 1);
+    const candidate = answer + delta;
+    if (candidate >= 0) options.add(candidate);
+  }
+
+  return shuffle([...options]);
+}
+
 function makeDirectSubtraction() {
   const subtrahend = randomInt(10, 499);
   const result = randomInt(10, 500);
   const minuend = subtrahend + result;
-  return `${minuend} - ${subtrahend} = ______`;
+  return {
+    section: "directas",
+    prompt: `${minuend} - ${subtrahend} = ?`,
+    answer: result,
+    choices: withChoices(result)
+  };
 }
 
 function makeBorrowingSubtraction() {
@@ -81,7 +103,14 @@ function makeBorrowingSubtraction() {
     subtrahend = minuend - randomInt(10, 99);
   }
 
-  return `${minuend} - ${subtrahend} = ______`;
+  const answer = minuend - subtrahend;
+
+  return {
+    section: "prestando",
+    prompt: `${minuend} - ${subtrahend} = ?`,
+    answer,
+    choices: withChoices(answer)
+  };
 }
 
 function makeWordProblem() {
@@ -92,8 +121,14 @@ function makeWordProblem() {
   const used = randomInt(55, total - 10);
   const verbs = ["regaló", "gastó", "vendieron", "usaron", "prestaron", "perdió", "sacaron"];
   const verb = pick(verbs);
+  const answer = total - used;
 
-  return `En la ${place}, ${name} tenía ${total} ${noun} y ${verb} ${used}. ¿Cuántos quedaron? ______`;
+  return {
+    section: "problemas",
+    prompt: `En la ${place}, ${name} tenía ${total} ${noun} y ${verb} ${used}. ¿Cuántos quedaron?`,
+    answer,
+    choices: withChoices(answer)
+  };
 }
 
 function buildExercises(total, selectedSections) {
@@ -103,32 +138,38 @@ function buildExercises(total, selectedSections) {
     problemas: makeWordProblem
   };
 
-  const pool = selectedSections.flatMap((section) => Array.from({ length: total }, () => generators[section]()));
-  return shuffle(pool).slice(0, total);
+  return Array.from({ length: total }, () => generators[pick(selectedSections)]());
 }
 
-function splitBySection(exercises) {
-  const parts = { directas: [], prestando: [], problemas: [] };
+function createAnswerInput(exercise, index, mode) {
+  if (mode === "multiple") {
+    const field = document.createElement("fieldset");
+    field.className = "options";
 
-  exercises.forEach((item) => {
-    if (item.includes("¿Cuántos")) {
-      parts.problemas.push(item);
-    } else {
-      const left = Number(item.split("-")[0].trim());
-      const right = Number(item.split("-")[1].split("=")[0].trim());
-      const mOnes = left % 10;
-      const sOnes = right % 10;
-      const mTens = Math.floor(left / 10) % 10;
-      const sTens = Math.floor(right / 10) % 10;
-      if (sOnes > mOnes || sTens > mTens) {
-        parts.prestando.push(item);
-      } else {
-        parts.directas.push(item);
-      }
-    }
-  });
+    exercise.choices.forEach((choice, idx) => {
+      const label = document.createElement("label");
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `answer-${index}`;
+      input.value = String(choice);
+      input.id = `answer-${index}-${idx}`;
 
-  return parts;
+      label.htmlFor = input.id;
+      label.appendChild(input);
+      label.append(` ${choice}`);
+      field.appendChild(label);
+    });
+
+    return field;
+  }
+
+  const textInput = document.createElement("input");
+  textInput.type = "text";
+  textInput.className = "text-answer";
+  textInput.placeholder = "Escribe tu respuesta";
+  textInput.inputMode = "numeric";
+  textInput.dataset.index = index;
+  return textInput;
 }
 
 function renderWorksheet() {
@@ -146,21 +187,25 @@ function renderWorksheet() {
   }
 
   setupMessage.textContent = "";
+  resultPanel.classList.add("hidden");
+  resultContent.innerHTML = "";
 
-  const exercises = buildExercises(total, selectedSections);
-  const groups = splitBySection(exercises);
+  const mode = answerMode.value;
+  currentExercises = buildExercises(total, selectedSections);
+
   const sectionTitles = {
     directas: "Parte 1: Restas directas",
     prestando: "Parte 2: Resta prestando",
     problemas: "Parte 3: Problemas de la vida real"
   };
 
-  worksheetTitle.textContent = `Guía generada: ${total} ejercicios aleatorios`;
+  worksheetTitle.textContent = `Prueba móvil: ${total} ejercicios`;
   worksheetContent.innerHTML = "";
 
   let counter = 1;
   SECTION_KEYS.forEach((section) => {
-    if (!selectedSections.includes(section)) return;
+    const items = currentExercises.filter((exercise) => exercise.section === section);
+    if (!selectedSections.includes(section) || items.length === 0) return;
 
     const block = document.createElement("section");
     block.className = "worksheet-block";
@@ -170,19 +215,75 @@ function renderWorksheet() {
 
     const list = document.createElement("ol");
     list.start = counter;
-    groups[section].forEach((text) => {
+
+    items.forEach((exercise, localIdx) => {
+      const idx = counter + localIdx - 1;
       const li = document.createElement("li");
-      li.textContent = text;
+
+      const statement = document.createElement("p");
+      statement.className = "question";
+      statement.textContent = exercise.prompt;
+      li.appendChild(statement);
+      li.appendChild(createAnswerInput(exercise, idx, mode));
       list.appendChild(li);
-      counter += 1;
     });
 
+    counter += items.length;
     block.appendChild(list);
     worksheetContent.appendChild(block);
   });
 }
 
+function getUserAnswer(index, mode) {
+  if (mode === "multiple") {
+    const checked = document.querySelector(`input[name="answer-${index}"]:checked`);
+    return checked ? Number(checked.value) : null;
+  }
+
+  const input = document.querySelector(`.text-answer[data-index="${index}"]`);
+  if (!input || input.value.trim() === "") return null;
+
+  const numericValue = Number(input.value.replace(/,/g, ".").trim());
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function gradeWorksheet() {
+  if (currentExercises.length === 0) {
+    setupMessage.textContent = "Primero genera una prueba.";
+    return;
+  }
+
+  const mode = answerMode.value;
+  let correct = 0;
+  let answered = 0;
+
+  currentExercises.forEach((exercise, index) => {
+    const answer = getUserAnswer(index, mode);
+    if (answer === null) return;
+
+    answered += 1;
+    if (answer === exercise.answer) {
+      correct += 1;
+    }
+  });
+
+  const total = currentExercises.length;
+  const incorrect = answered - correct;
+  const blank = total - answered;
+  const score = Math.round((correct / total) * 100);
+
+  resultContent.innerHTML = `
+    <p><strong>Puntaje:</strong> ${score}%</p>
+    <p><strong>Correctas:</strong> ${correct} de ${total}</p>
+    <p><strong>Incorrectas:</strong> ${incorrect}</p>
+    <p><strong>Sin responder:</strong> ${blank}</p>
+  `;
+
+  resultPanel.classList.remove("hidden");
+}
+
 generateBtn.addEventListener("click", renderWorksheet);
+gradeBtn.addEventListener("click", gradeWorksheet);
 printBtn.addEventListener("click", () => window.print());
 
 renderWorksheet();
