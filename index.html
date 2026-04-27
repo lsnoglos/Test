@@ -3,60 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Super Test de Ciencias 🧠🌈</title>
+    <title>Guía de Matemática – 3er Grado</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="fx-overlay" aria-hidden="true">
-      <div class="bolt b1"></div>
-      <div class="bolt b2"></div>
-      <div class="bolt b3"></div>
-    </div>
-
     <main class="app">
       <header class="hero panel">
-        <h1>🌟 Super Test de Ciencias Naturales 🌟</h1>
-        <p class="subtitle">Preguntas aleatorias con 4 opciones y efectos divertidos</p>
+        <h1>📘 Guía de Matemática – 3er Grado</h1>
+        <p class="subtitle">Restas prestando a la decena y a la centena (hasta el 1000)</p>
       </header>
 
-      <section id="startPanel" class="panel start-panel">
-        <h2>Elige tus temas</h2>
-        <p>✅ Si eliges 1 tema: 50 preguntas (calificadas sobre 100)</p>
-        <p>✅ Si eliges todos los temas: 100 preguntas aleatorias (sobre 100)</p>
+      <section class="panel">
+        <div class="meta-grid">
+          <label>Nombre: <input type="text" placeholder="____________________________" /></label>
+          <label>Fecha: <input type="text" placeholder="____________________________" /></label>
+        </div>
+        <p><strong>Instrucciones:</strong> Resuelve cada problema. Si necesitas, presta de la decena o de la centena.</p>
+      </section>
+
+      <section id="setupPanel" class="panel start-panel">
+        <h2>Selecciona secciones</h2>
+        <p>Puedes generar solo una parte o una guía completa de 100 ejercicios aleatorios.</p>
+
         <div class="topics">
-          <label><input class="topic-check" type="checkbox" value="pubertad" /> Pubertad</label>
-          <label><input class="topic-check" type="checkbox" value="higiene" /> Higiene</label>
-          <label><input class="topic-check" type="checkbox" value="naturaleza" /> Naturaleza</label>
-          <label><input class="topic-check" type="checkbox" value="sentidos" /> Los 5 sentidos</label>
-          <label><input class="topic-check" type="checkbox" value="metodos" /> Método científico y empírico</label>
+          <label><input class="section-check" type="checkbox" value="directas" checked /> Parte 1: Restas directas</label>
+          <label><input class="section-check" type="checkbox" value="prestando" checked /> Parte 2: Resta prestando</label>
+          <label><input class="section-check" type="checkbox" value="problemas" checked /> Parte 3: Problemas de la vida real</label>
         </div>
+
+        <div class="actions-row">
+          <label for="totalExercises"><strong>Total de ejercicios:</strong></label>
+          <input id="totalExercises" type="number" min="10" max="200" step="10" value="100" />
+          <button id="generateBtn" class="btn">🧮 Generar guía</button>
+          <button id="printBtn" class="btn secondary">🖨️ Imprimir</button>
+        </div>
+
         <p id="setupMessage" class="setup-message"></p>
-        <button id="startBtn" class="btn">▶️ Empezar</button>
       </section>
 
-      <section class="panel info">
-        <p id="progressText">Selecciona temas para iniciar</p>
-        <div class="progress-wrap">
-          <div id="progressBar" class="progress-bar"></div>
-        </div>
-        <div class="score-live">
-          <span>✅ Buenas: <strong id="scoreGood">0</strong></span>
-          <span>❌ Malas: <strong id="scoreBad">0</strong></span>
-        </div>
+      <section id="worksheetPanel" class="panel worksheet-panel">
+        <h2 id="worksheetTitle">Ejercicios</h2>
+        <div id="worksheetContent" class="worksheet-content"></div>
       </section>
-
-      <section id="quizCard" class="panel quiz-card hidden">
-        <h2 id="questionText">Cargando pregunta...</h2>
-        <div id="options" class="options"></div>
-        <p id="feedback" class="feedback"></p>
-      </section>
-
-      <section class="panel actions hidden">
-        <button id="nextBtn" class="btn" disabled>Siguiente ➡️</button>
-        <button id="restartBtn" class="btn secondary">🔄 Cambiar temas</button>
-      </section>
-
-      <section id="result" class="panel result hidden" aria-live="polite"></section>
     </main>
 
     <script src="script.js"></script>
