@@ -15,7 +15,7 @@
 
       <section class="panel">
         <div class="meta-grid">
-          <label>Nombre: <input type="text" placeholder="____________________________" /></label>
+          <label>Nombre: <input id="studentName" type="text" placeholder="____________________________" /></label>
           <label>Fecha: <input type="text" placeholder="____________________________" /></label>
         </div>
         <p><strong>Instrucciones:</strong> Resuelve cada problema desde el celular y luego revisa tus resultados.</p>
@@ -57,6 +57,13 @@
       <section id="resultPanel" class="panel result-panel hidden" aria-live="polite">
         <h2>Resultados</h2>
         <div id="resultContent"></div>
+      </section>
+
+      <section id="finishPanel" class="panel result-panel hidden" aria-live="polite">
+        <h2>Finalizar</h2>
+        <p>Cuando termines, presiona el botón para compartir los resultados en WhatsApp como imagen.</p>
+        <button id="finishBtn" class="btn success">📤 Finalizar y enviar a WhatsApp</button>
+        <p id="finishMessage" class="setup-message"></p>
       </section>
     </main>
 

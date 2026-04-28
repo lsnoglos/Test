@@ -6,14 +6,19 @@ const answerMode = document.getElementById("answerMode");
 const generateBtn = document.getElementById("generateBtn");
 const gradeBtn = document.getElementById("gradeBtn");
 const printBtn = document.getElementById("printBtn");
+const finishBtn = document.getElementById("finishBtn");
+const studentNameInput = document.getElementById("studentName");
 const setupMessage = document.getElementById("setupMessage");
 const worksheetTitle = document.getElementById("worksheetTitle");
 const worksheetContent = document.getElementById("worksheetContent");
 const resultPanel = document.getElementById("resultPanel");
 const resultContent = document.getElementById("resultContent");
+const finishPanel = document.getElementById("finishPanel");
+const finishMessage = document.getElementById("finishMessage");
 
 let currentExercises = [];
 let currentAnswerMode = "multiple";
+let lastResults = null;
 
 const nouns = [
   "lápices",
@@ -86,7 +91,7 @@ function makeDirectSubtraction() {
 }
 
 function makeBorrowingSubtraction() {
-  let minuend = randomInt(200, 1000);
+  const minuend = randomInt(200, 1000);
   let subtrahend = randomInt(100, minuend - 1);
 
   const mOnes = minuend % 10;
@@ -131,7 +136,6 @@ function makeWordProblem() {
     choices: withChoices(answer)
   };
 }
-
 
 function computeAnswerFromPrompt(prompt) {
   const numbers = prompt.match(/\d+/g);
@@ -198,6 +202,16 @@ function createAnswerInput(exercise, index, mode) {
   return textInput;
 }
 
+function getSectionLabel(section) {
+  const labels = {
+    directas: "Restas directas",
+    prestando: "Resta prestando",
+    problemas: "Problemas de la vida real"
+  };
+
+  return labels[section] || section;
+}
+
 function renderWorksheet() {
   const selectedSections = getSelectedSections();
   const total = Number(totalExercisesInput.value);
@@ -213,7 +227,10 @@ function renderWorksheet() {
   }
 
   setupMessage.textContent = "";
+  finishMessage.textContent = "";
+  lastResults = null;
   resultPanel.classList.add("hidden");
+  finishPanel.classList.add("hidden");
   resultContent.innerHTML = "";
 
   const mode = answerMode.value;
@@ -246,14 +263,13 @@ function renderWorksheet() {
     list.start = counter;
 
     items.forEach(({ exercise, index }) => {
-      const idx = index;
       const li = document.createElement("li");
 
       const statement = document.createElement("p");
       statement.className = "question";
       statement.textContent = exercise.prompt;
       li.appendChild(statement);
-      li.appendChild(createAnswerInput(exercise, idx, mode));
+      li.appendChild(createAnswerInput(exercise, index, mode));
       list.appendChild(li);
     });
 
@@ -274,6 +290,14 @@ function getUserAnswer(index, mode) {
 
   const numericValue = Number(input.value.replace(/,/g, ".").trim());
   return Number.isFinite(numericValue) ? numericValue : null;
+}
+
+function buildResultSummary(results) {
+  const uniqueSections = [...new Set(currentExercises.map((exercise) => exercise.section))];
+  const sectionsText = uniqueSections.map((section) => getSectionLabel(section)).join(", ");
+  const studentName = studentNameInput.value.trim() || "El estudiante";
+
+  return `${studentName} ha finalizado los exámenes de ${sectionsText} y ha logrado ${results.score}% (${results.correct} de ${results.total} correctas).`;
 }
 
 function gradeWorksheet() {
@@ -304,6 +328,16 @@ function gradeWorksheet() {
   const blank = total - answered;
   const score = Math.round((correct / total) * 100);
 
+  lastResults = {
+    score,
+    correct,
+    total,
+    incorrect,
+    blank,
+    summary: ""
+  };
+  lastResults.summary = buildResultSummary(lastResults);
+
   resultContent.innerHTML = `
     <p><strong>Puntaje:</strong> ${score}%</p>
     <p><strong>Correctas:</strong> ${correct} de ${total}</p>
@@ -312,10 +346,106 @@ function gradeWorksheet() {
   `;
 
   resultPanel.classList.remove("hidden");
+  finishPanel.classList.remove("hidden");
+}
+
+function makeResultCanvas(summaryText) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1080;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#f4f9ff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#1f3c88";
+  ctx.fillRect(80, 80, canvas.width - 160, canvas.height - 160);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 56px Arial";
+  ctx.fillText("Resultados del examen", 140, 220);
+
+  ctx.font = "40px Arial";
+  const words = summaryText.split(" ");
+  const lines = [];
+  let currentLine = "";
+
+  words.forEach((word) => {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (ctx.measureText(testLine).width > 760) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  });
+  if (currentLine) lines.push(currentLine);
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, 140, 340 + i * 58);
+  });
+
+  ctx.fillStyle = "#b7f7d4";
+  ctx.font = "bold 36px Arial";
+  ctx.fillText("Compartido desde la guía de matemática", 140, 940);
+
+  return canvas;
+}
+
+function canvasToFile(canvas, filename) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("No fue posible generar la imagen de resultados."));
+        return;
+      }
+
+      resolve(new File([blob], filename, { type: "image/png" }));
+    }, "image/png");
+  });
+}
+
+async function finishAndShare() {
+  if (!lastResults) {
+    finishMessage.textContent = "Primero debes ver los resultados.";
+    return;
+  }
+
+  try {
+    finishMessage.textContent = "Generando imagen de resultados...";
+    const summary = buildResultSummary(lastResults);
+    const canvas = makeResultCanvas(summary);
+    const file = await canvasToFile(canvas, "resultados-examen.png");
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: "Resultados del examen",
+        text: summary,
+        files: [file]
+      });
+      finishMessage.textContent = "Listo. Selecciona WhatsApp y el contacto para enviar la imagen.";
+      return;
+    }
+
+    const imageUrl = URL.createObjectURL(file);
+    const downloadLink = document.createElement("a");
+    downloadLink.href = imageUrl;
+    downloadLink.download = file.name;
+    downloadLink.click();
+    URL.revokeObjectURL(imageUrl);
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(summary)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    finishMessage.textContent = "Se descargó la imagen. Adjunta la imagen en WhatsApp y elige el contacto.";
+  } catch (error) {
+    console.error(error);
+    finishMessage.textContent = "No se pudo compartir automáticamente. Intenta nuevamente.";
+  }
 }
 
 generateBtn.addEventListener("click", renderWorksheet);
 gradeBtn.addEventListener("click", gradeWorksheet);
 printBtn.addEventListener("click", () => window.print());
+finishBtn.addEventListener("click", finishAndShare);
 
 renderWorksheet();
