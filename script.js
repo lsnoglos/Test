@@ -204,7 +204,9 @@ function renderWorksheet() {
 
   let counter = 1;
   SECTION_KEYS.forEach((section) => {
-    const items = currentExercises.filter((exercise) => exercise.section === section);
+    const items = currentExercises
+      .map((exercise, index) => ({ exercise, index }))
+      .filter(({ exercise }) => exercise.section === section);
     if (!selectedSections.includes(section) || items.length === 0) return;
 
     const block = document.createElement("section");
@@ -216,8 +218,8 @@ function renderWorksheet() {
     const list = document.createElement("ol");
     list.start = counter;
 
-    items.forEach((exercise, localIdx) => {
-      const idx = counter + localIdx - 1;
+    items.forEach(({ exercise, index }, localIdx) => {
+      const idx = index;
       const li = document.createElement("li");
 
       const statement = document.createElement("p");
