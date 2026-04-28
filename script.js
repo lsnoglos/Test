@@ -13,6 +13,7 @@ const resultPanel = document.getElementById("resultPanel");
 const resultContent = document.getElementById("resultContent");
 
 let currentExercises = [];
+let currentAnswerMode = "multiple";
 
 const nouns = [
   "lápices",
@@ -131,6 +132,23 @@ function makeWordProblem() {
   };
 }
 
+
+function computeAnswerFromPrompt(prompt) {
+  const numbers = prompt.match(/\d+/g);
+  if (!numbers || numbers.length < 2) return null;
+
+  const minuend = Number(numbers[0]);
+  const subtrahend = Number(numbers[1]);
+  if (!Number.isFinite(minuend) || !Number.isFinite(subtrahend)) return null;
+
+  return minuend - subtrahend;
+}
+
+function isExerciseConsistent(exercise) {
+  const computed = computeAnswerFromPrompt(exercise.prompt);
+  return computed !== null && computed === exercise.answer;
+}
+
 function buildExercises(total, selectedSections) {
   const generators = {
     directas: makeDirectSubtraction,
@@ -138,7 +156,15 @@ function buildExercises(total, selectedSections) {
     problemas: makeWordProblem
   };
 
-  return Array.from({ length: total }, () => generators[pick(selectedSections)]());
+  return Array.from({ length: total }, () => {
+    let exercise = generators[pick(selectedSections)]();
+
+    while (!isExerciseConsistent(exercise)) {
+      exercise = generators[pick(selectedSections)]();
+    }
+
+    return exercise;
+  });
 }
 
 function createAnswerInput(exercise, index, mode) {
@@ -191,6 +217,7 @@ function renderWorksheet() {
   resultContent.innerHTML = "";
 
   const mode = answerMode.value;
+  currentAnswerMode = mode;
   currentExercises = buildExercises(total, selectedSections);
 
   const sectionTitles = {
@@ -218,7 +245,7 @@ function renderWorksheet() {
     const list = document.createElement("ol");
     list.start = counter;
 
-    items.forEach(({ exercise, index }, localIdx) => {
+    items.forEach(({ exercise, index }) => {
       const idx = index;
       const li = document.createElement("li");
 
@@ -255,7 +282,7 @@ function gradeWorksheet() {
     return;
   }
 
-  const mode = answerMode.value;
+  const mode = currentAnswerMode;
   let correct = 0;
   let answered = 0;
 
@@ -263,8 +290,11 @@ function gradeWorksheet() {
     const answer = getUserAnswer(index, mode);
     if (answer === null) return;
 
+    const expectedAnswer = computeAnswerFromPrompt(exercise.prompt);
+    const safeAnswer = expectedAnswer === null ? exercise.answer : expectedAnswer;
+
     answered += 1;
-    if (answer === exercise.answer) {
+    if (answer === safeAnswer) {
       correct += 1;
     }
   });
