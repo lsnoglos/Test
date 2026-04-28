@@ -58,6 +58,16 @@ body {
   width: 100%;
 }
 
+.date-field-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.date-field-controls #todayBtn {
+  white-space: nowrap;
+}
+
 .topics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

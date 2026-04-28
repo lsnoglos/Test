@@ -8,6 +8,8 @@ const gradeBtn = document.getElementById("gradeBtn");
 const printBtn = document.getElementById("printBtn");
 const finishBtn = document.getElementById("finishBtn");
 const studentNameInput = document.getElementById("studentName");
+const dateInput = document.getElementById("dateInput");
+const todayBtn = document.getElementById("todayBtn");
 const setupMessage = document.getElementById("setupMessage");
 const worksheetTitle = document.getElementById("worksheetTitle");
 const worksheetContent = document.getElementById("worksheetContent");
@@ -405,6 +407,14 @@ function canvasToFile(canvas, filename) {
   });
 }
 
+function setTodayDate() {
+  if (!dateInput) return;
+
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("es-CL");
+  dateInput.value = formattedDate;
+}
+
 async function finishAndShare() {
   if (!lastResults) {
     finishMessage.textContent = "Primero debes ver los resultados.";
@@ -447,5 +457,8 @@ generateBtn.addEventListener("click", renderWorksheet);
 gradeBtn.addEventListener("click", gradeWorksheet);
 printBtn.addEventListener("click", () => window.print());
 finishBtn.addEventListener("click", finishAndShare);
+if (todayBtn) {
+  todayBtn.addEventListener("click", setTodayDate);
+}
 
 renderWorksheet();
