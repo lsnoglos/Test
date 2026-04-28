@@ -16,7 +16,13 @@
       <section class="panel">
         <div class="meta-grid">
           <label>Nombre: <input id="studentName" type="text" placeholder="____________________________" /></label>
-          <label>Fecha: <input type="text" placeholder="____________________________" /></label>
+          <label class="date-field">
+            Fecha:
+            <div class="date-field-controls">
+              <input id="dateInput" type="text" placeholder="____________________________" />
+              <button id="todayBtn" class="btn secondary" type="button">Hoy</button>
+            </div>
+          </label>
         </div>
         <p><strong>Instrucciones:</strong> Resuelve cada problema desde el celular y luego revisa tus resultados.</p>
       </section>
